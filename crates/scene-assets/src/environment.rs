@@ -108,8 +108,9 @@ impl Environment {
     }
 }
 
-/// Halve `base` repeatedly until a single pixel is left.
-fn mip_chain(base: TextureData) -> Vec<TextureData> {
+/// Halve `base` repeatedly until a single pixel is left, averaging in linear
+/// light. Level 0 is `base` itself.
+pub fn mip_chain(base: TextureData) -> Vec<TextureData> {
     let mut levels = vec![base];
 
     while {

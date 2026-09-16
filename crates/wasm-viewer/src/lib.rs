@@ -5,12 +5,13 @@
 //! the event listeners and the animation frame loop until `destroy()` is called
 //! on it.
 //!
-//! `model`, `camera` and `environment` are target independent and unit tested
-//! with a plain `cargo test`; the modules below them only exist on `wasm32`.
+//! `camera` is target independent and unit tested with a plain `cargo test`, as
+//! are `model` and `environment`, which live in the shared `scene-assets` crate
+//! and are re-exported here; the modules below them only exist on `wasm32`.
 
 pub mod camera;
-pub mod environment;
-pub mod model;
+
+pub use scene_assets::{environment, model};
 
 #[cfg(target_arch = "wasm32")]
 mod renderer;

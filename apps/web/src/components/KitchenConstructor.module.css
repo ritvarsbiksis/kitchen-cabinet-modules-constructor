@@ -1,0 +1,77 @@
+/* The Start button sits in the same reading column as the page intro. */
+.start {
+  max-width: 52rem;
+  margin: 0 auto;
+  padding: 0 var(--mantine-spacing-md) var(--mantine-spacing-xl);
+}
+
+/* Once started, the constructor spans the whole viewport width and fills the
+   height below the 60px nav bar. */
+.section {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: calc(100dvh - 60px);
+  min-height: 28rem;
+  scroll-margin-top: 60px;
+  border-top: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--mantine-spacing-md);
+  min-height: 48px;
+  padding: var(--mantine-spacing-xs) var(--mantine-spacing-md);
+  background-color: light-dark(var(--mantine-color-white), var(--mantine-color-dark-7));
+  border-bottom: 1px solid light-dark(var(--mantine-color-gray-3), var(--mantine-color-dark-4));
+}
+
+.summary {
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.stage {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  /* The renderer's clear colour, so there is no flash before the first frame. */
+  background-color: rgb(212 215 219);
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Stops the browser turning a drag into a scroll or a pinch-zoom, so the
+     pointer events reach the Rust handlers. */
+  touch-action: none;
+  cursor: grab;
+  opacity: 0;
+  transition: opacity 250ms ease;
+}
+
+.canvas[data-ready] {
+  opacity: 1;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mantine-spacing-sm);
+  padding: var(--mantine-spacing-md);
+  pointer-events: none;
+}
+
+.error {
+  max-width: 32rem;
+  pointer-events: auto;
+}

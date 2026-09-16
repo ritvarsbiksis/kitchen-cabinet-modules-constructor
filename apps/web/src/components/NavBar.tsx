@@ -9,6 +9,7 @@ const ROUTES = [
   { href: '/', label: 'Home' },
   { href: '/wasm-example', label: 'WASM example' },
   { href: '/wgpu-example', label: 'WGPU example' },
+  { href: '/kitchen-constructor', label: 'Kitchen constructor' },
 ] as const;
 
 export function NavBar() {
@@ -16,12 +17,12 @@ export function NavBar() {
 
   return (
     <header className={styles.header}>
-      <Group justify="space-between" h="100%" px="md">
-        <Text fw={700} size="lg" className={styles.brand}>
+      <Group justify="space-between" h="100%" px="md" wrap="nowrap">
+        <Text fw={700} size="lg" className={styles.brand} visibleFrom="sm">
           rust-wasm-example
         </Text>
 
-        <Group gap="xs" component="nav">
+        <Group gap="xs" component="nav" wrap="nowrap" className={styles.nav}>
           {ROUTES.map((route) => (
             <Link
               key={route.href}

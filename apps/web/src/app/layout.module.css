@@ -3,3 +3,10 @@
   margin: 0 auto;
   padding: var(--mantine-spacing-xl) var(--mantine-spacing-md);
 }
+
+/* Pages that need the whole viewport width - the kitchen constructor - mark
+   their root with `data-full-width` and manage their own padding. */
+.main:has([data-full-width]) {
+  max-width: none;
+  padding: 0;
+}

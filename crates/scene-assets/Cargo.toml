@@ -1,0 +1,20 @@
+[package]
+name = "scene-assets"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "glTF model loading and skybox decoding shared by the wgpu crates"
+
+[dependencies]
+# Target independent on purpose: nothing in here touches the GPU or the DOM, so
+# it is unit tested with a plain `cargo test` on the host and reused by every
+# crate that renders with wgpu.
+bytemuck = { version = "1", features = ["derive"] }
+glam = "0.30"
+gltf = { version = "1.4", default-features = false, features = [
+  "utils",
+  "names",
+  "extensions",
+  "KHR_materials_transmission",
+] }
+image = { version = "0.25", default-features = false, features = ["png"] }

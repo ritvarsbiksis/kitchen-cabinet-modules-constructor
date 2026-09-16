@@ -19,6 +19,10 @@ describe('NavBar', () => {
       'href',
       '/wgpu-example',
     );
+    expect(screen.getByRole('link', { name: 'Kitchen constructor' })).toHaveAttribute(
+      'href',
+      '/kitchen-constructor',
+    );
   });
 
   it('marks the current route as active', () => {

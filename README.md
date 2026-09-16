@@ -1,12 +1,14 @@
 # rust-wasm-example
 
 A monorepo scaffold pairing a **Next.js + TypeScript** app with Rust compiled to WebAssembly.
-The web app has three routes:
+The web app has four routes:
 
 - **WASM example** — a **Run WASM** button that calls into Rust, which mounts a Leptos view
   rendering `Hello World!` into a `<div>`.
 - **WGPU example** — a **View 3D object** button that opens a modal where Rust renders a glTF
   model with [`wgpu`](https://wgpu.rs), and you can orbit and zoom it.
+- **Kitchen constructor** — enter a wall size, then plan a run of kitchen base units along it in
+  an interactive 3D room rendered with `wgpu`.
 
 ## Layout
 
@@ -15,6 +17,8 @@ The web app has three routes:
 ├── apps/web/            Next.js app (App Router, TypeScript, Mantine, CSS Modules)
 ├── crates/wasm-hello/   Leptos component compiled to WASM with wasm-pack
 ├── crates/wasm-viewer/  glTF viewer rendered with wgpu, compiled to WASM
+├── crates/wasm-kitchen/ Kitchen constructor rendered with wgpu, compiled to WASM
+├── crates/scene-assets/ glTF and skybox decoding shared by both wgpu crates (host target)
 ├── Cargo.toml           Cargo workspace
 ├── package.json         npm workspaces root
 └── turbo.json           Turborepo task graph (build:wasm runs before build/dev)
@@ -49,7 +53,7 @@ before Next.js starts. The app is served at http://localhost:3000.
 | `npm run dev`        | Build the WASM, then start the Next.js dev server       |
 | `npm run build`      | Build the WASM, then produce a production Next.js build |
 | `npm start`          | Serve the production build                              |
-| `npm run build:wasm` | Build both crates into `apps/web/public/` (release)     |
+| `npm run build:wasm` | Build the three WASM crates into `apps/web/public/`     |
 | `npm test`           | Run the Vitest unit tests                               |
 | `npm run test:rust`  | Run the Rust unit tests (`cargo test --workspace`)      |
 | `npm run lint`       | ESLint over the web app                                 |
@@ -91,12 +95,12 @@ when someone opens the modal.
    best effort: an image that will not load arrives as empty bytes and the viewer renders on a
    built-in gradient instead of failing.
 
-2. **Parse.** [`model.rs`](crates/wasm-viewer/src/model.rs) reads the binary glTF with the `gltf`
+2. **Parse.** [`model.rs`](crates/scene-assets/src/model.rs) reads the binary glTF with the `gltf`
    crate, flattens the node hierarchy, bakes each node's transform into the vertices, decodes the
    embedded PNG, and recentres and rescales the model into a unit sphere — so the camera works the
    same way for any asset.
 
-3. **Light.** [`environment.rs`](crates/wasm-viewer/src/environment.rs) decodes the skybox and
+3. **Light.** [`environment.rs`](crates/scene-assets/src/environment.rs) decodes the skybox and
    builds a mip chain for each image on the CPU, averaging in linear light. The two images play
    different parts: the **background** is a blurred equirectangular panorama of a room, drawn as
    the backdrop and reflected as the soft half of the surroundings; the **foreground** is the room
@@ -129,6 +133,54 @@ Two details worth knowing if you adapt this:
   sRGB 8-bit, so `expand_range` in the shader fakes the dynamic range a photograph does not have -
   without it a reflected window is just light grey rather than a highlight.
 
+## How the kitchen constructor works
+
+The `/kitchen-constructor` route is a third WASM module, `wasm-kitchen`, fetched only once the
+user has entered their wall.
+
+1. **Wall size.** [`KitchenConstructor.tsx`](apps/web/src/components/KitchenConstructor.tsx) shows a
+   **Start** button that opens [`DimensionsModal.tsx`](apps/web/src/components/DimensionsModal.tsx):
+   width 200–500 cm and height 250–300 cm. On **Continue** the button is replaced by a stage that
+   spans the whole viewport width (the page marks itself `data-full-width`, which lifts the root
+   layout's column limit in `layout.module.css`).
+
+2. **Start.** [`loadKitchenWasm.ts`](apps/web/src/lib/loadKitchenWasm.ts) loads the module and the
+   placeholder `.glb` (memoised per URL), the skybox comes from the viewer's loader, and
+   `startKitchen(canvas, widthCm, heightCm, placeholder, background, foreground, onSlotClick)`
+   builds the room. Rust validates the wall size again.
+
+3. **Layout.** [`layout.rs`](crates/wasm-kitchen/src/layout.rs) puts a 6 × 6 m floor at the origin,
+   a 20 cm thick wall along its back edge and three pendant lamps in a row over the middle. Slots
+   are 80 cm wide, so a wall holds `floor(width / 80)` of them — integer centimetres, since
+   `4.0 / 0.8` in floating point would lose a module on a 4 m wall — centred along the wall. A model
+   is stood in its slot by its bounding box, so an asset exported slightly off-centre still lines up.
+
+4. **Render.** [`renderer.rs`](crates/wasm-kitchen/src/renderer.rs) uploads each model once and
+   draws it at any number of placements, each with a small uniform for its translation and hover
+   state. [`kitchen.wgsl`](crates/wasm-kitchen/src/kitchen.wgsl) lights everything with the three
+   lamps as point lights, a room ambient and reflections of a neutral room with the skybox
+   photograph mixed in, which is what the polished steel and aluminium fronts mirror. The floor tiles
+   are generated in [`floor.rs`](crates/wasm-kitchen/src/floor.rs) with a mip chain; the lamps and
+   wall are built in [`geometry.rs`](crates/wasm-kitchen/src/geometry.rs). Soft contact shadows stand
+   the run of modules on the floor.
+
+5. **Interact.** [`constructor.rs`](crates/wasm-kitchen/src/constructor.rs) handles pointer, pinch
+   and wheel events like the viewer, within limits in [`camera.rs`](crates/wasm-kitchen/src/camera.rs)
+   that keep the camera in front of the wall and above the floor. Hovering casts a ray through the
+   pointer against the slot boxes ([`picking.rs`](crates/wasm-kitchen/src/picking.rs)); the hit slot
+   eases into an LED glow — lit edges, glowing glass and light spilling onto the floor and wall. A
+   press that does not move more than a few pixels is a click and calls `onSlotClick(slot, moduleId)`
+   once the Rust state is no longer borrowed.
+
+6. **Choose.** [`ModulePickerModal.tsx`](apps/web/src/components/ModulePickerModal.tsx) lists the
+   modules from [`kitchenCatalog.ts`](apps/web/src/lib/kitchenCatalog.ts). Picking one fetches its
+   `.glb` and calls `placeModule(slot, id, bytes)`; Rust parses and uploads a module the first time
+   its id is seen and reuses it after that. A slot that already holds a module can be switched to
+   the other one or cleared back to the placeholder with `clearSlot(slot)`.
+
+To add a module, export an 80 × 87 × 58 cm `.glb` (Y up, front facing +Z) into
+`apps/web/public/models/` and add an entry to `KITCHEN_MODULES`.
+
 ### wasm-opt note
 
 `crates/wasm-hello/Cargo.toml` passes explicit feature flags to `wasm-opt`
@@ -140,12 +192,14 @@ under `[package.metadata.wasm-pack.profile.release]` to skip the optimiser entir
 
 - **TypeScript** — Vitest + Testing Library in jsdom. `apps/web/src/__tests__/` covers the
   button-to-`run_wasm` call path (the loader is mocked at the module boundary), the viewer's modal
-  lifecycle down to `destroy()` on close, error surfacing, nav links, and loader memoisation.
+  lifecycle down to `destroy()` on close, the kitchen constructor's wall size validation, Start →
+  stage flow, module picking and removal, error surfacing, nav links, and loader memoisation.
   `src/test-utils/render.tsx` wraps renders in `MantineProvider`.
-- **Rust** — `cargo test --workspace` runs host-target unit tests. `wasm-viewer` is split so that
-  the glTF parsing, the camera maths and the skybox decoding are target independent and tested
-  against the real asset;
-  the GPU and DOM code is `cfg(target_arch = "wasm32")` and exercised in a browser instead.
+- **Rust** — `cargo test --workspace` runs host-target unit tests. The glTF parsing and skybox
+  decoding (`scene-assets`), the viewer's camera and the constructor's layout, camera, picking,
+  procedural meshes and floor texture are target independent and tested on the host — including
+  checks that the bundled kitchen `.glb` files are the size of one slot. The GPU and DOM code is
+  `cfg(target_arch = "wasm32")` and exercised in a browser instead.
 
 ## Styling
 

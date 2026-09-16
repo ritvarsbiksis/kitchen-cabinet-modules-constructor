@@ -3,10 +3,12 @@
 //! Nothing in here touches the GPU or the DOM, so it builds for the host target
 //! and is covered by the unit tests at the bottom of the file.
 //!
-//! Node transforms are baked into the vertices at load time, and the whole model
-//! is then recentred on the origin and scaled to a unit size. That means the
-//! renderer never needs a per-draw model matrix and the camera can work in the
+//! Node transforms are baked into the vertices at load time. [`Model::from_glb`]
+//! then recentres the whole model on the origin and scales it to a unit size, so
+//! a viewer never needs a per-draw model matrix and its camera can work in the
 //! same units for any asset, however the exporter happened to scale it.
+//! [`Model::from_glb_in_metres`] skips that step for scenes that place assets
+//! next to each other at their real size.
 
 use glam::{Mat3, Mat4, Vec3};
 
@@ -72,8 +74,9 @@ pub struct TextureData {
 pub struct Model {
     pub primitives: Vec<Primitive>,
     pub textures: Vec<TextureData>,
-    /// Radius of the bounding sphere after normalisation, so the camera can
-    /// frame the model without knowing anything else about it.
+    /// Radius of the bounding sphere around the centre of the bounds, so the
+    /// camera can frame the model without knowing anything else about it. 1.0
+    /// for a normalised model.
     pub radius: f32,
 }
 
@@ -116,12 +119,32 @@ impl From<image::ImageError> for ModelError {
 }
 
 impl Model {
-    /// Parse a binary glTF file.
+    /// Parse a binary glTF file, recentred on the origin and scaled into a unit
+    /// sphere.
     ///
     /// Only self-contained `.glb` files are supported: buffers and images have to
     /// live in the binary chunk, which is how the viewer's asset is authored and
     /// what keeps loading to a single network request.
     pub fn from_glb(bytes: &[u8]) -> Result<Self, ModelError> {
+        let mut model = Self::parse(bytes)?;
+        model.normalise();
+        Ok(model)
+    }
+
+    /// Parse a binary glTF file and keep it exactly where and how big the
+    /// exporter authored it - metres, for a Blender export.
+    pub fn from_glb_in_metres(bytes: &[u8]) -> Result<Self, ModelError> {
+        let mut model = Self::parse(bytes)?;
+        let (min, max) = model.bounds();
+        let center = (min + max) * 0.5;
+        model.radius = (max - center).length();
+        model.update_centroids();
+        Ok(model)
+    }
+
+    /// Everything both loaders share: the images and the flattened primitives,
+    /// with transforms baked in but no rescaling.
+    fn parse(bytes: &[u8]) -> Result<Self, ModelError> {
         let gltf::Gltf { document, blob } = gltf::Gltf::from_slice(bytes)?;
         let blob = blob.ok_or(ModelError::MissingBuffer)?;
 
@@ -141,13 +164,11 @@ impl Model {
             return Err(ModelError::NoGeometry);
         }
 
-        let mut model = Self {
+        Ok(Self {
             primitives,
             textures,
             radius: 1.0,
-        };
-        model.normalise();
-        Ok(model)
+        })
     }
 
     /// Total triangle count, for the stats the UI shows.
@@ -166,21 +187,30 @@ impl Model {
         let scale = 1.0 / extent;
 
         for primitive in &mut self.primitives {
-            let mut sum = Vec3::ZERO;
             for vertex in &mut primitive.vertices {
                 let position = (Vec3::from(vertex.position) - center) * scale;
                 vertex.position = position.to_array();
-                sum += position;
             }
-            let count = primitive.vertices.len().max(1) as f32;
-            primitive.centroid = (sum / count).to_array();
         }
 
+        self.update_centroids();
         self.radius = 1.0;
     }
 
-    /// Axis-aligned bounds across every primitive.
-    fn bounds(&self) -> (Vec3, Vec3) {
+    /// Recompute each primitive's average vertex position.
+    fn update_centroids(&mut self) {
+        for primitive in &mut self.primitives {
+            let sum = primitive
+                .vertices
+                .iter()
+                .fold(Vec3::ZERO, |sum, vertex| sum + Vec3::from(vertex.position));
+            let count = primitive.vertices.len().max(1) as f32;
+            primitive.centroid = (sum / count).to_array();
+        }
+    }
+
+    /// Axis-aligned bounds across every primitive, as `(min, max)`.
+    pub fn bounds(&self) -> (Vec3, Vec3) {
         let mut min = Vec3::splat(f32::INFINITY);
         let mut max = Vec3::splat(f32::NEG_INFINITY);
 
@@ -458,6 +488,28 @@ mod tests {
             let opacity = primitive.material.opacity();
             assert!((0.05..1.0).contains(&opacity), "odd opacity {opacity}");
         }
+    }
+
+    #[test]
+    fn loading_in_metres_keeps_the_authored_size_and_position() {
+        let normalised = sunglasses();
+        let authored =
+            Model::from_glb_in_metres(SUNGLASSES).expect("the bundled .glb should parse");
+
+        let (min, max) = authored.bounds();
+        let center = (min + max) * 0.5;
+        assert!((authored.radius - (max - center).length()).abs() < 1e-5);
+        assert_eq!(authored.triangle_count(), normalised.triangle_count());
+
+        // Same shape either way: the normalised copy is the authored one scaled
+        // down by its radius.
+        let (normalised_min, normalised_max) = normalised.bounds();
+        let ratio = (max - min).length() / (normalised_max - normalised_min).length();
+        assert!(
+            (ratio - authored.radius).abs() < 1e-3,
+            "{ratio} vs {}",
+            authored.radius
+        );
     }
 
     #[test]

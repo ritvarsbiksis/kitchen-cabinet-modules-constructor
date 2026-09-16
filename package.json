@@ -13,10 +13,11 @@
     "test:rust": "cargo test --workspace",
     "lint": "turbo run lint",
     "typecheck": "turbo run typecheck",
-    "build:wasm": "npm run build:wasm:hello && npm run build:wasm:viewer",
+    "build:wasm": "npm run build:wasm:hello && npm run build:wasm:viewer && npm run build:wasm:kitchen",
     "build:wasm:hello": "wasm-pack build crates/wasm-hello --target web --out-dir ../../apps/web/public/wasm --out-name wasm_hello",
     "build:wasm:viewer": "wasm-pack build crates/wasm-viewer --target web --out-dir ../../apps/web/public/wasm-viewer --out-name wasm_viewer",
-    "build:wasm:dev": "wasm-pack build crates/wasm-hello --dev --target web --out-dir ../../apps/web/public/wasm --out-name wasm_hello && wasm-pack build crates/wasm-viewer --dev --target web --out-dir ../../apps/web/public/wasm-viewer --out-name wasm_viewer",
+    "build:wasm:kitchen": "wasm-pack build crates/wasm-kitchen --target web --out-dir ../../apps/web/public/wasm-kitchen --out-name wasm_kitchen",
+    "build:wasm:dev": "wasm-pack build crates/wasm-hello --dev --target web --out-dir ../../apps/web/public/wasm --out-name wasm_hello && wasm-pack build crates/wasm-viewer --dev --target web --out-dir ../../apps/web/public/wasm-viewer --out-name wasm_viewer && wasm-pack build crates/wasm-kitchen --dev --target web --out-dir ../../apps/web/public/wasm-kitchen --out-name wasm_kitchen",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },

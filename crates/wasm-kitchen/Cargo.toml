@@ -1,19 +1,19 @@
 [package]
-name = "wasm-viewer"
+name = "wasm-kitchen"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
-description = "glTF viewer rendered with wgpu (WebGPU/WebGL2) and compiled to WebAssembly"
+description = "Interactive kitchen constructor rendered with wgpu (WebGPU/WebGL2) and compiled to WebAssembly"
 
 [lib]
 # cdylib -> the .wasm artifact wasm-pack emits; rlib -> so `cargo test` can link it.
 crate-type = ["cdylib", "rlib"]
 
 [dependencies]
-# Model loading and maths are target independent, so they stay unit-testable with
-# a plain `cargo test` on the host - the glTF and skybox decoding lives in
-# `scene-assets`, shared with `wasm-kitchen`. Everything that touches the GPU or
-# the DOM is behind `cfg(target_arch = "wasm32")` below.
+# The room layout, the camera, picking and the procedural meshes and floor
+# texture are target independent, so they are unit tested with a plain
+# `cargo test` on the host. Everything that touches the GPU or the DOM is behind
+# `cfg(target_arch = "wasm32")` below.
 bytemuck = { version = "1", features = ["derive"] }
 glam = "0.30"
 scene-assets = { path = "../scene-assets" }
@@ -23,9 +23,7 @@ wasm-bindgen = "0.2"
 console_error_panic_hook = "0.1"
 js-sys = "0.3"
 wasm-bindgen-futures = "0.4"
-# Native backends are pointless here and only slow the build down, so the default
-# features are off: `webgpu` is the primary backend and `webgl` the fallback for
-# browsers that do not expose WebGPU yet.
+# Same backends as `wasm-viewer`: WebGPU first, WebGL2 as the fallback.
 wgpu = { version = "30", default-features = false, features = [
   "std",
   "wgsl",
@@ -38,7 +36,7 @@ version = "0.3"
 features = [
   "AddEventListenerOptions",
   "console",
-  "Document",
+  "CssStyleDeclaration",
   "DomRect",
   "Element",
   "Event",

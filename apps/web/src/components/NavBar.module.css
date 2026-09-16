@@ -8,12 +8,27 @@
 }
 
 .brand {
+  flex: none;
   font-family: var(--mantine-font-family-monospace);
   letter-spacing: -0.02em;
 }
 
+/* On a narrow screen the links scroll sideways rather than wrapping out of the
+   fixed-height header. */
+.nav {
+  min-width: 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.nav::-webkit-scrollbar {
+  display: none;
+}
+
 .link {
   display: block;
+  flex: none;
+  white-space: nowrap;
   padding: var(--mantine-spacing-xs) var(--mantine-spacing-sm);
   border-radius: var(--mantine-radius-sm);
   text-decoration: none;

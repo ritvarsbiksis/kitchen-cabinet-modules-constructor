@@ -1,0 +1,14 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "zsh",
+      "runtimeArgs": [
+        "-c",
+        "source \"$HOME/.nvm/nvm.sh\" && nvm use 24 >/dev/null && npm run dev --workspace apps/web"
+      ],
+      "port": 3000
+    }
+  ]
+}

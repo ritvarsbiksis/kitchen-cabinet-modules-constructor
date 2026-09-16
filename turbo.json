@@ -4,7 +4,7 @@
   "tasks": {
     "build:wasm": {
       "inputs": ["../../crates/**/*.rs", "../../crates/**/Cargo.toml", "../../Cargo.toml"],
-      "outputs": ["public/wasm/**", "public/wasm-viewer/**"]
+      "outputs": ["public/wasm/**", "public/wasm-viewer/**", "public/wasm-kitchen/**"]
     },
     "build": {
       "dependsOn": ["build:wasm"],

@@ -29,6 +29,13 @@ export default function HomePage() {
           <ListItem>
             <code>crates/wasm-viewer</code> — glTF viewer rendered with <code>wgpu</code>
           </ListItem>
+          <ListItem>
+            <code>crates/wasm-kitchen</code> — interactive kitchen constructor rendered with{' '}
+            <code>wgpu</code>
+          </ListItem>
+          <ListItem>
+            <code>crates/scene-assets</code> — glTF and skybox loading shared by both wgpu crates
+          </ListItem>
           <ListItem>ESLint + Prettier for linting and formatting</ListItem>
           <ListItem>Vitest + Testing Library for unit tests</ListItem>
           <ListItem>Turborepo orchestrating the WASM build ahead of the Next.js build</ListItem>
@@ -41,6 +48,9 @@ export default function HomePage() {
         </Button>
         <Button component={Link} href="/wgpu-example" variant="default" size="md">
           Go to the WGPU example
+        </Button>
+        <Button component={Link} href="/kitchen-constructor" variant="default" size="md">
+          Open the kitchen constructor
         </Button>
       </Group>
     </Stack>
