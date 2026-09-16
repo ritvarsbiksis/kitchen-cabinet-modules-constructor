@@ -1,0 +1,14 @@
+.source {
+  padding: var(--mantine-spacing-md);
+  border-radius: var(--mantine-radius-md);
+  background-color: light-dark(var(--mantine-color-gray-1), var(--mantine-color-dark-8));
+}
+
+.code {
+  margin: 0;
+  overflow-x: auto;
+  font-family: var(--mantine-font-family-monospace);
+  font-size: var(--mantine-font-size-xs);
+  line-height: 1.6;
+  color: light-dark(var(--mantine-color-dark-7), var(--mantine-color-gray-3));
+}

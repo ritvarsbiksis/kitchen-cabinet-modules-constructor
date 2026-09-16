@@ -1,0 +1,41 @@
+.stage {
+  position: relative;
+  width: 100%;
+  /* Tall enough to be worth rotating, but never taller than the viewport. */
+  height: min(60vh, 30rem);
+  border-radius: var(--mantine-radius-md);
+  overflow: hidden;
+  background-color: var(--mantine-color-dark-9);
+}
+
+.canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* Stops the browser from turning a drag into a scroll or a pinch-zoom, so
+     the pointer events reach the Rust handlers. */
+  touch-action: none;
+  cursor: grab;
+  /* Faded in once the first frame is up, to cover the blank canvas. */
+  opacity: 0;
+  transition: opacity 200ms ease;
+}
+
+.canvas[data-ready] {
+  opacity: 1;
+}
+
+.canvas:active {
+  cursor: grabbing;
+}
+
+.overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--mantine-spacing-sm);
+  pointer-events: none;
+}

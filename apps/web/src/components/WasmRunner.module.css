@@ -1,0 +1,34 @@
+.root {
+  margin-top: var(--mantine-spacing-lg);
+}
+
+.stage {
+  padding: var(--mantine-spacing-md);
+  background-color: light-dark(var(--mantine-color-gray-0), var(--mantine-color-dark-6));
+  border-style: dashed;
+}
+
+.stageLabel {
+  font-family: var(--mantine-font-family-monospace);
+  margin-bottom: var(--mantine-spacing-xs);
+}
+
+.target {
+  min-height: 2.5rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Styles the <p class="wasm-hello"> element produced by the Leptos component.
+   It is created outside React, so it is targeted through the module-scoped
+   parent with :global(). */
+.target :global(.wasm-hello) {
+  margin: 0;
+  font-size: var(--mantine-font-size-xl);
+  font-weight: 700;
+  color: var(--mantine-color-orange-filled);
+}
+
+.hint[data-done] {
+  display: none;
+}

@@ -1,0 +1,31 @@
+{
+  "name": "rust-wasm-example",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "start": "turbo run start",
+    "test": "turbo run test",
+    "test:rust": "cargo test --workspace",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "build:wasm": "npm run build:wasm:hello && npm run build:wasm:viewer",
+    "build:wasm:hello": "wasm-pack build crates/wasm-hello --target web --out-dir ../../apps/web/public/wasm --out-name wasm_hello",
+    "build:wasm:viewer": "wasm-pack build crates/wasm-viewer --target web --out-dir ../../apps/web/public/wasm-viewer --out-name wasm_viewer",
+    "build:wasm:dev": "wasm-pack build crates/wasm-hello --dev --target web --out-dir ../../apps/web/public/wasm --out-name wasm_hello && wasm-pack build crates/wasm-viewer --dev --target web --out-dir ../../apps/web/public/wasm-viewer --out-name wasm_viewer",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3"
+  },
+  "packageManager": "npm@11.13.0",
+  "engines": {
+    "node": ">=20"
+  }
+}

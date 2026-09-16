@@ -1,0 +1,44 @@
+{
+  "name": "@rust-wasm-example/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "build:wasm": "npm run build:wasm:hello && npm run build:wasm:viewer",
+    "build:wasm:hello": "wasm-pack build ../../crates/wasm-hello --target web --out-dir ../../apps/web/public/wasm --out-name wasm_hello",
+    "build:wasm:viewer": "wasm-pack build ../../crates/wasm-viewer --target web --out-dir ../../apps/web/public/wasm-viewer --out-name wasm_viewer"
+  },
+  "dependencies": {
+    "@mantine/core": "^8.1.1",
+    "@mantine/hooks": "^8.1.1",
+    "next": "^15.1.6",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@eslint/eslintrc": "^3.2.0",
+    "@testing-library/dom": "^10.4.0",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.1.0",
+    "@testing-library/user-event": "^14.5.2",
+    "@types/node": "^22.10.7",
+    "@types/react": "^19.0.7",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "eslint": "^9.18.0",
+    "eslint-config-next": "^15.1.6",
+    "eslint-config-prettier": "^9.1.0",
+    "jsdom": "^26.0.0",
+    "postcss": "^8.5.1",
+    "postcss-preset-mantine": "^1.17.0",
+    "postcss-simple-vars": "^7.0.1",
+    "typescript": "^5.7.3",
+    "vitest": "^3.0.4"
+  }
+}
