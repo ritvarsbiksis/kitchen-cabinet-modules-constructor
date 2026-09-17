@@ -1,13 +1,21 @@
 {
-  "$schema": "https://turbo.build/schema.json",
+  "$schema": "https://turborepo.com/schema.json",
   "globalDependencies": ["**/.env.*local"],
   "tasks": {
     "build:wasm": {
-      "inputs": ["../../crates/**/*.rs", "../../crates/**/Cargo.toml", "../../Cargo.toml"],
-      "outputs": ["public/wasm/**", "public/wasm-viewer/**", "public/wasm-kitchen/**"]
+      "inputs": [
+        "$TURBO_ROOT$/crates/**",
+        "$TURBO_ROOT$/Cargo.toml",
+        "$TURBO_ROOT$/Cargo.lock",
+        "$TURBO_ROOT$/rust-toolchain.toml"
+      ],
+      "outputs": [
+        "public/wasm/**",
+        "public/wasm-viewer/**",
+        "public/wasm-kitchen/**"
+      ]
     },
     "build": {
-      "dependsOn": ["build:wasm"],
       "outputs": [".next/**", "!.next/cache/**"]
     },
     "dev": {

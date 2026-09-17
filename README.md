@@ -21,7 +21,7 @@ The web app has four routes:
 ├── crates/scene-assets/ glTF and skybox decoding shared by both wgpu crates (host target)
 ├── Cargo.toml           Cargo workspace
 ├── package.json         npm workspaces root
-└── turbo.json           Turborepo task graph (build:wasm runs before build/dev)
+└── turbo.json           Turborepo task graph (build:wasm runs before dev, not build)
 ```
 
 ## Prerequisites
@@ -48,22 +48,24 @@ before Next.js starts. The app is served at http://localhost:3000.
 
 ## Commands
 
-| Command              | What it does                                            |
-| -------------------- | ------------------------------------------------------- |
-| `npm run dev`        | Build the WASM, then start the Next.js dev server       |
-| `npm run build`      | Build the WASM, then produce a production Next.js build |
-| `npm start`          | Serve the production build                              |
-| `npm run build:wasm` | Build the three WASM crates into `apps/web/public/`     |
-| `npm test`           | Run the Vitest unit tests                               |
-| `npm run test:rust`  | Run the Rust unit tests (`cargo test --workspace`)      |
-| `npm run lint`       | ESLint over the web app                                 |
-| `npm run typecheck`  | `tsc --noEmit`                                          |
-| `npm run format`     | Prettier write across the repo                          |
+| Command              | What it does                                        |
+| -------------------- | --------------------------------------------------- |
+| `npm run dev`        | Build the WASM, then start the Next.js dev server   |
+| `npm run build`      | Production Next.js build from the committed WASM    |
+| `npm start`          | Serve the production build                          |
+| `npm run build:wasm` | Build the three WASM crates into `apps/web/public/` |
+| `npm test`           | Run the Vitest unit tests                           |
+| `npm run test:rust`  | Run the Rust unit tests (`cargo test --workspace`)  |
+| `npm run lint`       | ESLint over the web app                             |
+| `npm run typecheck`  | `tsc --noEmit`                                      |
+| `npm run format`     | Prettier write across the repo                      |
 
 ## How the WASM integration works
 
 1. **Build.** `wasm-pack build crates/wasm-hello --target web` emits an ES module plus a `.wasm`
-   binary into `apps/web/public/wasm/`. That directory is gitignored — it is a build artifact.
+   binary into `apps/web/public/wasm/`. The output of all three crates is committed, so
+   `npm run build` (and Vercel) never needs a Rust toolchain. After changing a crate, run
+   `npm run build:wasm` and commit the regenerated files.
 
 2. **Load.** [`apps/web/src/lib/loadWasm.ts`](apps/web/src/lib/loadWasm.ts) imports the glue module
    with `webpackIgnore` / `turbopackIgnore` magic comments, so neither Next.js bundler touches it.
@@ -197,6 +199,12 @@ To add a module, export an 80 × 87 × 58 cm `.glb` (Y up, front facing +Z) into
 (`--enable-bulk-memory` and friends). The `wasm-opt` bundled with wasm-pack predates WASM features
 that current rustc emits by default, and validation fails without them. Set `wasm-opt = false`
 under `[package.metadata.wasm-pack.profile.release]` to skip the optimiser entirely.
+
+## Deploying to Vercel
+
+Import the repository and set the project's **Root Directory** to `apps/web`. Vercel detects
+Turborepo and Next.js and runs `turbo run build`, which is just `next build` — the WASM in
+`apps/web/public/` is served from the committed files, since Vercel's build image has no Rust.
 
 ## Testing
 
