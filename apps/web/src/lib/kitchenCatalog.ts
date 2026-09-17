@@ -31,6 +31,19 @@ export const MODULE_WIDTH_CM = 80;
 /** The see-through box standing in every empty slot. */
 export const PLACEHOLDER_URL = '/models/kitchen-placeholder-box.glb';
 
+/**
+ * The room the polished fronts mirror, in the order Rust expects the images.
+ * Both come from one living-room photograph: the foreground is the photo, hung
+ * in front of the run as a light card; the background is a panorama with that
+ * photo projected in front of and behind the run, mirrored on the two sides so
+ * it wraps around seamlessly. The card's direction and size in
+ * `crates/wasm-kitchen/src/kitchen.wgsl` match that projection.
+ */
+export const KITCHEN_ENVIRONMENT_URLS = {
+  background: '/env/living-room-background.png',
+  foreground: '/env/living-room-foreground.png',
+} as const;
+
 /** A module that can be placed in a slot. */
 export interface KitchenModule {
   /** Stable id Rust caches the uploaded model under. */

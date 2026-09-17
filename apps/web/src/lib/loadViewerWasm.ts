@@ -56,7 +56,7 @@ export const ENVIRONMENT_URLS = {
 
 let modulePromise: Promise<ViewerWasmModule> | null = null;
 let modelPromise: Promise<ArrayBuffer> | null = null;
-let environmentPromise: Promise<EnvironmentBytes> | null = null;
+const environmentPromises = new Map<string, Promise<EnvironmentBytes>>();
 
 /**
  * Load and instantiate the viewer module, memoising the result so reopening the
@@ -97,7 +97,8 @@ export async function loadModel(url: string = MODEL_URL): Promise<Uint8Array> {
 }
 
 /**
- * Fetch the two skybox images, memoised like the model.
+ * Fetch the two skybox images, memoised per pair of URLs - the viewer and the
+ * kitchen constructor each reflect their own room.
  *
  * Best effort on purpose: the viewer treats empty bytes as "no skybox" and falls
  * back to a procedural gradient, so a missing or broken image costs the room
@@ -106,12 +107,16 @@ export async function loadModel(url: string = MODEL_URL): Promise<Uint8Array> {
 export async function loadEnvironment(
   urls: { background: string; foreground: string } = ENVIRONMENT_URLS,
 ): Promise<EnvironmentBytes> {
-  environmentPromise ??= Promise.all([
-    fetchImage(urls.background),
-    fetchImage(urls.foreground),
-  ]).then(([background, foreground]) => ({ background, foreground }));
+  const key = `${urls.background}\n${urls.foreground}`;
+  let promise = environmentPromises.get(key);
+  if (!promise) {
+    promise = Promise.all([fetchImage(urls.background), fetchImage(urls.foreground)]).then(
+      ([background, foreground]) => ({ background, foreground }),
+    );
+    environmentPromises.set(key, promise);
+  }
 
-  return environmentPromise;
+  return promise;
 }
 
 /** Fetch one image as bytes, warning rather than throwing when it is missing. */
@@ -132,5 +137,5 @@ async function fetchImage(url: string): Promise<Uint8Array> {
 export function resetViewerCache(): void {
   modulePromise = null;
   modelPromise = null;
-  environmentPromise = null;
+  environmentPromises.clear();
 }

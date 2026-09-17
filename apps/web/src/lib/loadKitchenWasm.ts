@@ -4,8 +4,8 @@
  *
  * Same approach as `loadViewerWasm.ts`: the module is fetched from `public/` at
  * runtime rather than bundled, and only once someone has entered their wall
- * size. The skybox the metal fronts reflect is shared with the viewer, so it
- * comes from `loadEnvironment` there.
+ * size. The skybox the metal fronts reflect is fetched with the viewer's
+ * `loadEnvironment`, pointed at `KITCHEN_ENVIRONMENT_URLS`.
  */
 
 /** A running constructor, as exported by `wasm-kitchen`. */

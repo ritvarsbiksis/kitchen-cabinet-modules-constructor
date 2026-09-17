@@ -95,6 +95,23 @@ describe('loadEnvironment', () => {
     expect(Array.from(first.background)).toEqual([0x89, 0x50, 0x4e, 0x47]);
   });
 
+  it('caches each pair of images on its own, so another room is not served the first one', async () => {
+    const fetchMock = vi.fn().mockImplementation(async (url: string) => ({
+      ok: true,
+      status: 200,
+      arrayBuffer: async () => Uint8Array.from(url, (character) => character.charCodeAt(0)).buffer,
+    }));
+    vi.stubGlobal('fetch', fetchMock);
+
+    await loadEnvironment();
+    const other = await loadEnvironment({ background: '/env/b.png', foreground: '/env/f.png' });
+    await loadEnvironment({ background: '/env/b.png', foreground: '/env/f.png' });
+
+    expect(fetchMock).toHaveBeenCalledTimes(4);
+    expect(String.fromCharCode(...other.background)).toBe('/env/b.png');
+    expect(String.fromCharCode(...other.foreground)).toBe('/env/f.png');
+  });
+
   it('hands back empty bytes for an image that is missing, instead of throwing', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const fetchMock = vi

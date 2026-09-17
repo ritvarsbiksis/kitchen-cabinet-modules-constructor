@@ -98,10 +98,13 @@ const GROUND_AMBIENT = vec3<f32>(0.3, 0.28, 0.25);
 const ROOM_CEILING = vec3<f32>(1.0, 0.99, 0.97);
 const ROOM_WALL = vec3<f32>(0.8, 0.77, 0.71);
 const ROOM_FLOOR = vec3<f32>(0.62, 0.6, 0.56);
-// How much of a reflection is the skybox photograph rather than the room. It is
-// a photo of another, warmer kitchen, so it adds detail but not its colour.
+// How much of a reflection is the skybox photograph rather than the plain room:
+// a little on rough or painted surfaces, nearly all of it on polished metal,
+// which should mirror the room's window, dark walls and furniture as sharply
+// and with as much contrast as a mirror would.
 const PHOTO_REFLECTION: f32 = 0.35;
-const PHOTO_SATURATION: f32 = 0.35;
+const POLISHED_PHOTO_REFLECTION: f32 = 0.95;
+const PHOTO_SATURATION: f32 = 0.6;
 // Reflections for metals and for everything else: a painted wall should only
 // have a sheen, not a mirror image.
 const METAL_REFLECTION: f32 = 1.0;
@@ -116,8 +119,13 @@ const LED_EDGE_WIDTH: f32 = 0.012;
 // placeholders read as places to click rather than as panes of glass.
 const PLACEHOLDER_IDLE_EDGE: f32 = 0.35;
 
-const CARD_DIRECTION = vec3<f32>(0.18, 0.30, 1.0);
-const CARD_HALF_SIZE = vec2<f32>(1.05, 1.05);
+// The room photograph, hung in front of the run and tilted 35 degrees down, which
+// is where upright fronts seen from standing height mirror. It spans 90 degrees
+// across at the photo's 3:2 aspect. The background panorama projects the same
+// photo with the same card, so keep both in step with
+// `apps/web/public/env/living-room-*.png`.
+const CARD_DIRECTION = vec3<f32>(0.0, -0.5736, 0.8192);
+const CARD_HALF_SIZE = vec2<f32>(1.0, 0.6667);
 const BACKGROUND_EXPOSURE: f32 = 1.3;
 const CARD_EXPOSURE: f32 = 2.2;
 const HIGHLIGHT_GAIN: f32 = 2.2;
@@ -155,8 +163,11 @@ fn expand_range(color: vec3<f32>) -> vec3<f32> {
     return color * (1.0 + HIGHLIGHT_GAIN * luminance * luminance);
 }
 
+// Linear in roughness rather than its square root: the fronts are polished to
+// roughness 0.08, and they should keep the photograph's edges instead of
+// blurring them away a few mip levels down.
 fn environment_lod(roughness: f32, max_lod: f32) -> f32 {
-    return clamp(sqrt(roughness) * max_lod, 0.0, max_lod);
+    return clamp(roughness * max_lod, 0.0, max_lod);
 }
 
 fn background_sample(direction: vec3<f32>, lod: f32) -> vec3<f32> {
@@ -202,9 +213,9 @@ fn room_environment(direction: vec3<f32>, roughness: f32) -> vec3<f32> {
     return mix(wall_and_ceiling, ROOM_FLOOR, below);
 }
 
-// What the surroundings send back along `direction`: the room, with some of the
-// skybox photograph's detail over it when the images are there.
-fn environment(direction: vec3<f32>, roughness: f32) -> vec3<f32> {
+// What the surroundings send back along `direction`: the room, with the skybox
+// photograph over it when the images are there - most of all on polished metal.
+fn environment(direction: vec3<f32>, roughness: f32, polish: f32) -> vec3<f32> {
     let room = room_environment(direction, roughness);
     if (globals.flags.y < 0.5) {
         return room;
@@ -217,7 +228,7 @@ fn environment(direction: vec3<f32>, roughness: f32) -> vec3<f32> {
 
     let luminance = dot(photo, vec3<f32>(0.2126, 0.7152, 0.0722));
     photo = mix(vec3<f32>(luminance), photo, PHOTO_SATURATION);
-    return mix(room, photo, PHOTO_REFLECTION);
+    return mix(room, photo, mix(PHOTO_REFLECTION, POLISHED_PHOTO_REFLECTION, polish));
 }
 
 // 1.0 on the edges of the slot's box, fading to 0 a strip's width away. An
@@ -361,7 +372,10 @@ fn fs_main(input: VertexOutput) -> @location(0) vec4<f32> {
     let fresnel_ambient = f0 + (max(vec3<f32>(1.0 - roughness), f0) - f0)
         * pow(clamp(1.0 - n_dot_v, 0.0, 1.0), 5.0);
     let reflection_strength = mix(DIELECTRIC_REFLECTION, METAL_REFLECTION, metallic);
-    let ambient_specular = environment(reflection, roughness) * fresnel_ambient * reflection_strength;
+    // 1 for mirror-polished metal, fading out by a satin finish.
+    let polish = metallic * (1.0 - smoothstep(0.05, 0.5, roughness));
+    let ambient_specular = environment(reflection, roughness, polish) * fresnel_ambient
+        * reflection_strength;
 
     var alpha = material.params.w;
     if (alpha < 1.0) {

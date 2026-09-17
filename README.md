@@ -132,6 +132,12 @@ Two details worth knowing if you adapt this:
   itself into a seamless 512×256 panorama, blurred and faded into ceiling and floor tones. They are
   sRGB 8-bit, so `expand_range` in the shader fakes the dynamic range a photograph does not have -
   without it a reflected window is just light grey rather than a highlight.
+- **Kitchen skybox.** The constructor reflects a different room, `living-room-*.png`, derived from
+  one living-room photograph. The foreground is the photo at 1024×683; the background is a
+  2048×1024 panorama with that photo projected onto four cards tilted 35° down - in front of the
+  run, behind it, and mirrored on the two sides so every seam meets itself - fading into ceiling and
+  floor tones above and below. The foreground card in `kitchen.wgsl` uses the same direction and
+  size, so the sharp photo and the panorama line up where the fronts reflect them.
 
 ## How the kitchen constructor works
 
@@ -145,7 +151,9 @@ user has entered their wall.
    layout's column limit in `layout.module.css`).
 
 2. **Start.** [`loadKitchenWasm.ts`](apps/web/src/lib/loadKitchenWasm.ts) loads the module and the
-   placeholder `.glb` (memoised per URL), the skybox comes from the viewer's loader, and
+   placeholder `.glb` (memoised per URL), the skybox - the kitchen's own pair,
+   `KITCHEN_ENVIRONMENT_URLS` in [`kitchenCatalog.ts`](apps/web/src/lib/kitchenCatalog.ts) - comes
+   through the viewer's loader, which memoises each pair of URLs separately, and
    `startKitchen(canvas, widthCm, heightCm, placeholder, background, foreground, onSlotClick)`
    builds the room. Rust validates the wall size again.
 
@@ -158,8 +166,10 @@ user has entered their wall.
 4. **Render.** [`renderer.rs`](crates/wasm-kitchen/src/renderer.rs) uploads each model once and
    draws it at any number of placements, each with a small uniform for its translation and hover
    state. [`kitchen.wgsl`](crates/wasm-kitchen/src/kitchen.wgsl) lights everything with the three
-   lamps as point lights, a room ambient and reflections of a neutral room with the skybox
-   photograph mixed in, which is what the polished steel and aluminium fronts mirror. The floor tiles
+   lamps as point lights, a room ambient and reflections of a living room. Polished metal mirrors
+   that photograph almost entirely and nearly as sharply as a mirror - window, blinds, dark walls
+   and sofa - while satin aluminium and painted surfaces blur it and blend it with a neutral room.
+   The floor tiles
    are generated in [`floor.rs`](crates/wasm-kitchen/src/floor.rs) with a mip chain; the lamps and
    wall are built in [`geometry.rs`](crates/wasm-kitchen/src/geometry.rs). Soft contact shadows stand
    the run of modules on the floor.

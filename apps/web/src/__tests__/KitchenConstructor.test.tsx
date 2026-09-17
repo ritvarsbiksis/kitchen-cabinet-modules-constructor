@@ -134,6 +134,11 @@ describe('KitchenConstructor', () => {
       new Uint8Array([0x89, 0x4e]),
       expect.any(Function),
     );
+    // The fronts mirror the kitchen's own room, not the viewer's skybox.
+    expect(loadEnvironmentMock).toHaveBeenCalledWith({
+      background: '/env/living-room-background.png',
+      foreground: '/env/living-room-foreground.png',
+    });
   });
 
   it('opens the module list for a clicked slot and places the chosen module', async () => {

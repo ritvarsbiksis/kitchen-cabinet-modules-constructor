@@ -5,7 +5,12 @@ import { Alert, Badge, Button, Group, Loader, Text } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
 import { DimensionsModal } from '@/components/DimensionsModal';
 import { ModulePickerModal, type PickerTarget } from '@/components/ModulePickerModal';
-import { PLACEHOLDER_URL, type KitchenModule, type WallDimensions } from '@/lib/kitchenCatalog';
+import {
+  KITCHEN_ENVIRONMENT_URLS,
+  PLACEHOLDER_URL,
+  type KitchenModule,
+  type WallDimensions,
+} from '@/lib/kitchenCatalog';
 import {
   loadGlb,
   loadKitchenWasm,
@@ -53,7 +58,7 @@ function KitchenStage({ dimensions }: { dimensions: WallDimensions }) {
         const [wasm, placeholder, environment] = await Promise.all([
           loadKitchenWasm(),
           loadGlb(PLACEHOLDER_URL),
-          loadEnvironment(),
+          loadEnvironment(KITCHEN_ENVIRONMENT_URLS),
         ]);
         const canvas = canvasRef.current;
         if (cancelled || !canvas) {
