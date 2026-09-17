@@ -1,0 +1,17 @@
+{
+  "name": "wasm-viewer",
+  "type": "module",
+  "description": "glTF viewer rendered with wgpu (WebGPU/WebGL2) and compiled to WebAssembly",
+  "version": "0.1.0",
+  "license": "MIT",
+  "files": [
+    "wasm_viewer_bg.wasm",
+    "wasm_viewer.js",
+    "wasm_viewer.d.ts"
+  ],
+  "main": "wasm_viewer.js",
+  "types": "wasm_viewer.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

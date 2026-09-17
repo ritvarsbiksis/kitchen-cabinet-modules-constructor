@@ -1,0 +1,17 @@
+{
+  "name": "wasm-hello",
+  "type": "module",
+  "description": "Leptos component compiled to WebAssembly and driven from the Next.js app",
+  "version": "0.1.0",
+  "license": "MIT",
+  "files": [
+    "wasm_hello_bg.wasm",
+    "wasm_hello.js",
+    "wasm_hello.d.ts"
+  ],
+  "main": "wasm_hello.js",
+  "types": "wasm_hello.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

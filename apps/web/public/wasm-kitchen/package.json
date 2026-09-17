@@ -1,0 +1,17 @@
+{
+  "name": "wasm-kitchen",
+  "type": "module",
+  "description": "Interactive kitchen constructor rendered with wgpu (WebGPU/WebGL2) and compiled to WebAssembly",
+  "version": "0.1.0",
+  "license": "MIT",
+  "files": [
+    "wasm_kitchen_bg.wasm",
+    "wasm_kitchen.js",
+    "wasm_kitchen.d.ts"
+  ],
+  "main": "wasm_kitchen.js",
+  "types": "wasm_kitchen.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}
